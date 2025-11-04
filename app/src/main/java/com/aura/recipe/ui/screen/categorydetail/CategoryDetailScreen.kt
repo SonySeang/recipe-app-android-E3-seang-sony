@@ -44,17 +44,30 @@ fun CategoryDetailScreen(
                 title = { 
                     Text(
                         text = uiState.categoryDetail?.name ?: "Category",
-                        maxLines = 1
+                        maxLines = 1,
+                        fontWeight = FontWeight.Bold
                     ) 
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack, 
-                            contentDescription = "Back"
-                        )
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack, 
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
             )
         }
     ) { paddingValues ->
@@ -70,32 +83,57 @@ fun CategoryDetailScreen(
                 )
             } else {
                 uiState.categoryDetail?.let { category ->
-                    LazyColumn(contentPadding = PaddingValues(16.dp)) {
+                    LazyColumn(
+                        contentPadding = PaddingValues(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
                         item {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(category.imageUrl)
-                                    .crossfade(true)
-                                    .build(),
-                                contentDescription = category.name,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(250.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Card(
+                                shape = RoundedCornerShape(24.dp),
+                                elevation = CardDefaults.cardElevation(12.dp)
+                            ) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(category.imageUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = category.name,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(280.dp)
+                                )
+                            }
+                        }
+                        
+                        item {
                             Text(
                                 text = category.name,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = category.description,
-                                style = MaterialTheme.typography.bodyLarge
+                                style = MaterialTheme.typography.headlineLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
                             )
                         }
+                        
+                        item {
+                            Card(
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                ),
+                                elevation = CardDefaults.cardElevation(4.dp)
+                            ) {
+                                Text(
+                                    text = category.description,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.4,
+                                    modifier = Modifier.padding(20.dp)
+                                )
+                            }
+                        }
+                        
+                        item { Spacer(modifier = Modifier.height(20.dp)) }
                     }
                 }
             }

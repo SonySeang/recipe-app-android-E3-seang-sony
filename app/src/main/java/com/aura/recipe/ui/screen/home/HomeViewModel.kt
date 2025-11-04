@@ -14,9 +14,9 @@ import kotlinx.coroutines.launch
 data class HomeUiState(
     val userName: String = "Alena Sabyan",
     val categories: List<Category> = emptyList(),
-    val selectedCategory: Category? = null,
-    val featuredRecipes: List<Meal> = emptyList(),
-    val popularRecipes: List<Meal> = emptyList(),
+    val randomMeal: Meal? = null,
+    val popularMeals: List<Meal> = emptyList(),
+    val areas: List<String> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -35,15 +35,14 @@ class HomeViewModel(private val repository: RecipeRepository = RecipeRepository(
             try {
                 val categories = repository.getCategories()
                 val meals = repository.getMeals()
-                val selectedCategory = categories.firstOrNull()
+                val areas = listOf("Italian", "Chinese", "Mexican", "Indian", "French", "Japanese")
 
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         categories = categories,
-                        featuredRecipes = meals.take(5), // Example: first 5 are "featured"
-                        selectedCategory = selectedCategory,
-                        popularRecipes = meals.filter { meal -> meal.category == selectedCategory?.name }
+                        popularMeals = meals.take(10),
+                        areas = areas
                     )
                 }
             } catch (e: Exception) {
@@ -52,21 +51,17 @@ class HomeViewModel(private val repository: RecipeRepository = RecipeRepository(
         }
     }
 
-    fun selectCategory(category: Category) {
+    fun loadRandomMeal() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 val meals = repository.getMeals()
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        selectedCategory = category,
-                        popularRecipes = meals.filter { meal -> meal.category == category.name }
-                    )
-                }
+                val randomMeal = meals.randomOrNull()
+                _uiState.update { it.copy(randomMeal = randomMeal) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "Failed to filter meals: ${e.message}") }
+                // Handle error silently for random meal
             }
         }
     }
+
+
 }

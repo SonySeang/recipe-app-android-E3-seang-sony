@@ -10,6 +10,9 @@ import androidx.navigation.navArgument
 import com.aura.recipe.ui.screen.categorydetail.CategoryDetailScreen
 import com.aura.recipe.ui.screen.mealdetail.MealDetailScreen
 import com.aura.recipe.ui.screen.home.HomeScreen
+import com.aura.recipe.ui.screen.onboarding.OnboardingScreen
+import com.aura.recipe.ui.screen.favorites.FavoritesScreen
+import com.aura.recipe.ui.screen.explore.ExploreScreen
 import com.aura.recipe.ui.theme.RecipeTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,9 +28,18 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun RecipeAppNavHost() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "home") {
+    NavHost(navController = navController, startDestination = "onboarding") {
+        composable("onboarding") {
+            OnboardingScreen(navController = navController)
+        }
         composable("home") {
             HomeScreen(navController = navController)
+        }
+        composable("favorites") {
+            FavoritesScreen(navController = navController)
+        }
+        composable("explore") {
+            ExploreScreen(navController = navController)
         }
         composable(
             route = "mealDetail/{mealId}",
