@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,12 +28,11 @@ import com.aura.recipe.data.model.IngredientDetail
 @Composable
 fun MealDetailScreen(
     navController: NavController,
-    mealId: String, // Accept mealId directly
+    mealId: String,
     mealDetailViewModel: MealDetailViewModel = viewModel()
 ) {
     val uiState by mealDetailViewModel.uiState.collectAsState()
 
-    // Fetch data when the screen is first displayed
     LaunchedEffect(mealId) {
         mealDetailViewModel.fetchMealDetails(mealId)
     }
@@ -39,12 +40,59 @@ fun MealDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = uiState.mealDetail?.mealName ?: "Details") },
+                title = { 
+                    Text(
+                        text = uiState.mealDetail?.mealName ?: "Recipe Details",
+                        maxLines = 1,
+                        fontWeight = FontWeight.Bold
+                    ) 
+                },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                Icons.Default.ArrowBack, 
+                                "Back",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
-                }
+                },
+                actions = {
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (uiState.isFavorite) 
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                            else 
+                                MaterialTheme.colorScheme.surface
+                        ),
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        IconButton(onClick = { mealDetailViewModel.toggleFavorite() }) {
+                            Icon(
+                                imageVector = if (uiState.isFavorite) 
+                                    Icons.Default.Favorite 
+                                else 
+                                    Icons.Default.FavoriteBorder,
+                                contentDescription = "Toggle Favorite",
+                                tint = if (uiState.isFavorite) 
+                                    MaterialTheme.colorScheme.primary 
+                                else 
+                                    MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
             )
         }
     ) { paddingValues ->
@@ -60,31 +108,89 @@ fun MealDetailScreen(
                 )
             } else {
                 uiState.mealDetail?.let { meal ->
-                    LazyColumn(contentPadding = PaddingValues(16.dp)) {
+                    LazyColumn(
+                        contentPadding = PaddingValues(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
                         item {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current).data(meal.mealThumb).crossfade(true).build(),
-                                contentDescription = meal.mealName,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxWidth().height(250.dp).clip(RoundedCornerShape(16.dp))
+                            Card(
+                                shape = RoundedCornerShape(24.dp),
+                                elevation = CardDefaults.cardElevation(12.dp)
+                            ) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(meal.mealThumb)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = meal.mealName,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(280.dp)
+                                )
+                            }
+                        }
+                        
+                        item {
+                            Text(
+                                text = meal.mealName,
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
                             )
-                            Spacer(Modifier.height(16.dp))
-                            Text(meal.mealName, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(16.dp))
                         }
 
-                        item { Text("Ingredients", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }
+                        item {
+                            Card(
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                ),
+                                elevation = CardDefaults.cardElevation(4.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(20.dp)) {
+                                    Text(
+                                        text = "🧑🍳 Ingredients",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
+                            }
+                        }
+                        
                         items(meal.ingredients) { ingredient ->
                             IngredientItem(ingredient)
                         }
 
-                        item { Spacer(Modifier.height(16.dp)) }
-
                         item {
-                            Text("Instructions", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(8.dp))
-                            Text(meal.instructions, style = MaterialTheme.typography.bodyLarge)
+                            Card(
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                ),
+                                elevation = CardDefaults.cardElevation(4.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(20.dp)) {
+                                    Text(
+                                        text = "📝 Instructions",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = meal.instructions,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.4
+                                    )
+                                }
+                            }
                         }
+                        
+                        item { Spacer(modifier = Modifier.height(20.dp)) }
                     }
                 }
             }
@@ -94,8 +200,40 @@ fun MealDetailScreen(
 
 @Composable
 private fun IngredientItem(ingredient: IngredientDetail) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-        Text(ingredient.ingredient, Modifier.weight(1f))
-        Text(ingredient.measure, fontWeight = FontWeight.Medium)
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = ingredient.ingredient,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f)
+            )
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                )
+            ) {
+                Text(
+                    text = ingredient.measure,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+        }
     }
 }
